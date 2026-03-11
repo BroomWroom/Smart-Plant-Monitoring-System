@@ -1,0 +1,1519 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Smart Plant Dashboard — Winter Minimal</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        /* ---------- Winter Chill Palette ---------- */
+        :root {
+            --bg-1: #f3f8fb;
+            --bg-2: #e9f2f8;
+            --card: rgba(255, 255, 255, 0.85);
+            --muted: #6b7280;
+            --accent-1: #1e90ff;
+            --accent-2: #7dd3fc;
+            --accent-3: #bde6e8;
+            --danger: #ef4444;
+            --ok: #10b981;
+            --glass-shadow: 0 8px 30px rgba(14, 30, 37, 0.06);
+            --radius: 14px;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--bg-1), var(--bg-2));
+            color: #0f172a;
+            -webkit-font-smoothing: antialiased;
+            padding: 28px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin: 0;
+            color: #0b5075
+        }
+
+        .grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: 1fr;
+        }
+
+        @media(min-width:880px) {
+            .grid {
+                grid-template-columns: 360px 1fr
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 18px;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .plant-name {
+            font-weight: 700;
+            font-size: 18px;
+            color: #064a6e
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .kv {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed rgba(6, 74, 110, 0.04)
+        }
+
+        .kv strong {
+            color: #073047
+        }
+
+        .select,
+        .btn {
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(12, 74, 115, 0.08);
+            background: white;
+            font-size: 14px;
+        }
+
+        .btn {
+            cursor: pointer;
+            background: linear-gradient(180deg, var(--accent-1), #0f69d1);
+            color: white;
+            border: none
+        }
+
+        .row {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px
+        }
+
+        .small {
+            flex: 1;
+            padding: 10px;
+            border-radius: 12px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.7));
+            text-align: center
+        }
+
+        .small .val {
+            font-weight: 700;
+            font-size: 18px;
+            color: #08385b
+        }
+
+        .small .label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px
+        }
+
+        .prediction {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pred-text {
+            font-weight: 600
+        }
+
+        .pred-danger {
+            background: linear-gradient(90deg, rgba(254, 226, 226, 0.9), rgba(255, 246, 246, 0.9));
+            border: 1px solid rgba(239, 68, 68, 0.12);
+            color: var(--danger)
+        }
+
+        .pred-ok {
+            background: linear-gradient(90deg, rgba(225, 249, 238, 0.9), rgba(247, 255, 250, 0.9));
+            border: 1px solid rgba(16, 185, 129, 0.08);
+            color: var(--ok)
+        }
+
+        .chip {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(14, 30, 37, 0.04);
+            font-size: 12px;
+            color: #06364d
+        }
+
+        /* Plant emoji badge */
+        .plant-emoji {
+            font-size: 36px;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        /* Category badge */
+        .category-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 4px;
+            letter-spacing: 0.03em;
+        }
+
+        .cat-herb {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .cat-veggie {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .cat-fruit {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .cat-flower {
+            background: #fae8ff;
+            color: #7e22ce;
+        }
+
+        .cat-succulent {
+            background: #e0f2fe;
+            color: #075985;
+        }
+
+        .cat-tropical {
+            background: #fff7ed;
+            color: #9a3412;
+        }
+
+        .cat-tree {
+            background: #f0fdf4;
+            color: #14532d;
+        }
+
+        .cat-custom {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        /* ---- Custom Plant Modal ---- */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 30, 50, 0.35);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 18px;
+            padding: 28px;
+            width: 100%;
+            max-width: 460px;
+            box-shadow: 0 24px 60px rgba(10, 30, 60, 0.18);
+            position: relative;
+            animation: modalIn 0.18s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                transform: translateY(18px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal h2 {
+            margin: 0 0 18px;
+            font-size: 18px;
+            color: #064a6e;
+        }
+
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .form-row label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-row input,
+        .form-row select,
+        .form-row textarea {
+            padding: 8px 10px;
+            border-radius: 9px;
+            border: 1px solid #d1e3f0;
+            font-size: 14px;
+            background: #f8fbfd;
+            color: #0f172a;
+            outline: none;
+            transition: border 0.15s;
+        }
+
+        .form-row input:focus,
+        .form-row textarea:focus {
+            border-color: var(--accent-1);
+            background: white;
+        }
+
+        .form-row textarea {
+            resize: vertical;
+            min-height: 58px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid #d1e3f0;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+            color: var(--muted);
+        }
+
+        .btn-save {
+            padding: 8px 20px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(180deg, #1e90ff, #0f69d1);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-edit-custom {
+            margin-top: 8px;
+            width: 100%;
+            padding: 7px;
+            border-radius: 9px;
+            border: 1px dashed #93c5fd;
+            background: #eff8ff;
+            color: #1e40af;
+            font-size: 13px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--muted);
+            line-height: 1;
+        }
+
+        /* saved-plants list */
+        .saved-list {
+            margin-bottom: 14px;
+        }
+
+        .saved-list-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+
+        .saved-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 9px;
+            background: #f3f8fb;
+            margin-bottom: 5px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: border 0.12s, background 0.12s;
+        }
+
+        .saved-item:hover {
+            border-color: #93c5fd;
+            background: #eff8ff;
+        }
+
+        .saved-item .si-name {
+            flex: 1;
+            font-weight: 600;
+            color: #064a6e;
+        }
+
+        .saved-item .si-del {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 15px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px dashed #d1e3f0;
+            margin: 14px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Smart Plant Dashboard</h1>
+        </header>
+
+        <div class="grid">
+            <!-- LEFT: Plant Info + Controls -->
+            <section class="card" aria-label="Plant information">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                    <div>
+                        <div class="plant-emoji" id="plantEmoji">🌿</div>
+                        <div class="plant-name" id="plantName">Basil</div>
+                        <div class="muted" id="plantType">Ocimum basilicum — aromatic herb</div>
+                        <div><span class="category-badge cat-herb" id="plantCategory">Herb</span></div>
+                    </div>
+
+                    <div style="text-align:right">
+                        <div class="chip" id="statusChip">Status: Loading</div>
+                        <div style="height:6px"></div>
+                        <select id="plantSelect" class="select" aria-label="Select plant">
+                            <optgroup label="🌿 Herbs">
+                                <option value="basil">🌿 Basil</option>
+                                <option value="mint">🌱 Mint</option>
+                                <option value="rosemary">🌾 Rosemary</option>
+                                <option value="cilantro">🍃 Cilantro</option>
+                                <option value="lavender">💜 Lavender</option>
+                            </optgroup>
+                            <optgroup label="🥬 Vegetables">
+                                <option value="spinach">🥬 Spinach</option>
+                                <option value="lettuce">🥗 Lettuce</option>
+                                <option value="chilli">🌶️ Chilli</option>
+                                <option value="cucumber">🥒 Cucumber</option>
+                            </optgroup>
+                            <optgroup label="🍅 Fruits">
+                                <option value="tomato">🍅 Tomato</option>
+                                <option value="strawberry">🍓 Strawberry</option>
+                            </optgroup>
+                            <optgroup label="🌸 Flowers">
+                                <option value="rose">🌹 Rose</option>
+                                <option value="sunflower">🌻 Sunflower</option>
+                                <option value="marigold">🌼 Marigold</option>
+                                <option value="jasmine">🤍 Jasmine</option>
+                            </optgroup>
+                            <optgroup label="🪴 Succulents & Cacti">
+                                <option value="succulent">🪴 Succulent</option>
+                                <option value="aloe">🌵 Aloe Vera</option>
+                                <option value="cactus">🌵 Cactus</option>
+                            </optgroup>
+                            <optgroup label="🌴 Tropical">
+                                <option value="monstera">🌿 Monstera</option>
+                                <option value="pothos">🍀 Pothos</option>
+                                <option value="snakeplant">🐍 Snake Plant</option>
+                            </optgroup>
+                            <optgroup label="🌳 Trees">
+                                <option value="mango">🥭 Mango</option>
+                                <option value="lemon">🍋 Lemon Tree</option>
+                            </optgroup>
+                            <optgroup label="⚙️ Other">
+                                <option value="custom">⚙️ Custom</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="height:10px"></div>
+
+                <div id="requirements">
+                    <div class="kv">
+                        <div class="muted">Ideal soil moisture</div>
+                        <div><strong id="idealMoisture">40 - 60%</strong></div>
+                    </div>
+                    <div class="kv">
+                        <div class="muted">Ideal temp</div>
+                        <div><strong id="idealTemp">18 - 30°C</strong></div>
+                    </div>
+                    <div class="kv">
+                        <div class="muted">Ideal humidity</div>
+                        <div><strong id="idealHumidity">50 - 70%</strong></div>
+                    </div>
+                    <div class="kv">
+                        <div class="muted">Light</div>
+                        <div><strong id="idealLight">Partial sun</strong></div>
+                    </div>
+                    <div class="kv">
+                        <div class="muted">Watering frequency</div>
+                        <div><strong id="idealWatering">Every 2-3 days</strong></div>
+                    </div>
+                    <div class="kv">
+                        <div class="muted">Care tip</div>
+                        <div style="max-width:180px;text-align:right"><strong id="careTip"
+                                style="font-size:12px;color:#0f766e">Pinch flowers to boost leaf growth</strong></div>
+                    </div>
+                </div>
+
+                <!-- shown only when custom plant is selected -->
+                <button class="btn-edit-custom" id="editCustomBtn" onclick="openModal()">
+                    ✏️ Edit / Save Custom Plant
+                </button>
+
+                <div class="row" style="margin-top:14px">
+                    <div class="small">
+                        <div class="val" id="latestMoist">--%</div>
+                        <div class="label">Soil moisture (latest)</div>
+                    </div>
+                    <div class="small">
+                        <div class="val" id="latestTemp">--°C</div>
+                        <div class="label">Temperature</div>
+                    </div>
+                    <div class="small">
+                        <div class="val" id="latestHum">--%</div>
+                        <div class="label">Humidity</div>
+                    </div>
+                </div>
+
+                <div id="predictionBox" class="prediction pred-ok" style="margin-top:12px">
+                    <div style="flex:1">
+                        <div class="pred-text" id="predMain">Predicting next watering time...</div>
+                        <div class="muted" id="predSub" style="font-size:13px;margin-top:6px">Linear estimate based on
+                            recent decay</div>
+                    </div>
+                    <div style="min-width:120px;text-align:right">
+                        <button class="btn" id="refreshBtn">Refresh data</button>
+                    </div>
+                </div>
+                <div style="height:6px"></div>
+            </section>
+
+            <!-- RIGHT: Charts -->
+            <main>
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                        <div>
+                            <strong style="font-size:16px;color:#08385b">Soil moisture — historical</strong>
+                            <div class="muted" style="margin-top:4px">Past readings and simple projection</div>
+                        </div>
+                        <div class="muted" id="lastUpdated">Updated: —</div>
+                    </div>
+
+                    <canvas id="moistureChart" style="width:100%;height:260px"></canvas>
+
+                    <div class="row" style="margin-top:14px">
+                        <div class="small">
+                            <div class="val" id="moistAvg">--%</div>
+                            <div class="label">Avg moisture (24h)</div>
+                        </div>
+                        <div class="small">
+                            <div class="val" id="moistTrend">—</div>
+                            <div class="label">Trend / hour</div>
+                        </div>
+                        <div class="small">
+                            <div class="val" id="nextWaterEst">—</div>
+                            <div class="label">Est. time to dry</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="height:16px"></div>
+
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                        <div>
+                            <strong style="font-size:16px;color:#08385b">Environment snapshot</strong>
+                            <div class="muted" style="margin-top:4px">Latest sensor values</div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:12px;flex-wrap:wrap">
+                        <div style="flex:1;min-width:160px" class="small">
+                            <div class="val" id="envTemp">--°C</div>
+                            <div class="label">Temperature</div>
+                        </div>
+                        <div style="flex:1;min-width:160px" class="small">
+                            <div class="val" id="envHum">--%</div>
+                            <div class="label">Humidity</div>
+                        </div>
+                        <div style="flex:1;min-width:160px" class="small">
+                            <div class="val" id="envLight">--</div>
+                            <div class="label">Soil Raw ADC</div>
+                        </div>
+                        <div style="flex:1;min-width:160px" class="small">
+                            <div class="val" id="envSoil">--%</div>
+                            <div class="label">Soil moisture</div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        /*******************************************************
+         *  SAMPLE DATA (fallback)
+         *******************************************************/
+        const sampleData = (function baseSample() {
+            const now = Date.now();
+            const arr = [];
+            for (let i = 12; i >= 0; i--) {
+                const ts = now - i * 60 * 60 * 1000;
+                const moisture = Math.max(20, Math.round(55 - (12 - i) * 2.5 + (Math.random() * 4 - 2)));
+                const temp = Math.round(25 + Math.sin(i / 2) * 3 + (Math.random() * 1.8 - 0.9));
+                const hum = Math.round(60 + Math.cos(i / 3) * 5 + (Math.random() * 3 - 1.5));
+                const light = Math.round(300 + Math.max(0, (12 - i)) * 30 + (Math.random() * 20 - 10));
+                arr.push({ ts, moisture, temp, hum, light });
+            }
+            return arr;
+        })();
+
+        /*******************************************************
+         *  PLANT PROFILES
+         *  Fields: display, emoji, type, category, catClass,
+         *          idealMoisture, idealTemp, idealHumidity,
+         *          idealLight, watering, tip
+         *******************************************************/
+        const PLANTS = {
+            // -------- HERBS --------
+            basil: {
+                display: 'Basil', emoji: '🌿',
+                type: 'Ocimum basilicum — aromatic herb',
+                category: 'Herb', catClass: 'cat-herb',
+                idealMoisture: '40 - 60%', idealTemp: '18 - 30°C',
+                idealHumidity: '50 - 70%', idealLight: 'Partial sun / bright shade',
+                watering: 'Every 2-3 days',
+                tip: 'Pinch flowers to boost leaf growth'
+            },
+            mint: {
+                display: 'Mint', emoji: '🌱',
+                type: 'Mentha — fast-growing herb',
+                category: 'Herb', catClass: 'cat-herb',
+                idealMoisture: '50 - 70%', idealTemp: '15 - 25°C',
+                idealHumidity: '50 - 70%', idealLight: 'Partial shade',
+                watering: 'Every 1-2 days',
+                tip: 'Grow in containers to prevent spreading'
+            },
+            rosemary: {
+                display: 'Rosemary', emoji: '🌾',
+                type: 'Salvia rosmarinus — woody herb',
+                category: 'Herb', catClass: 'cat-herb',
+                idealMoisture: '20 - 40%', idealTemp: '18 - 28°C',
+                idealHumidity: '30 - 50%', idealLight: 'Full sun',
+                watering: 'Every 5-7 days',
+                tip: 'Prefers dry soil — overwatering is the #1 killer'
+            },
+            cilantro: {
+                display: 'Cilantro', emoji: '🍃',
+                type: 'Coriandrum sativum — cool-season herb',
+                category: 'Herb', catClass: 'cat-herb',
+                idealMoisture: '40 - 60%', idealTemp: '17 - 27°C',
+                idealHumidity: '40 - 60%', idealLight: 'Partial sun',
+                watering: 'Every 2-3 days',
+                tip: 'Bolts quickly in heat — keep cool for longer harvest'
+            },
+            lavender: {
+                display: 'Lavender', emoji: '💜',
+                type: 'Lavandula — fragrant flowering herb',
+                category: 'Herb', catClass: 'cat-herb',
+                idealMoisture: '15 - 35%', idealTemp: '15 - 25°C',
+                idealHumidity: '30 - 50%', idealLight: 'Full sun',
+                watering: 'Every 5-7 days',
+                tip: 'Excellent drainage is essential — hates wet roots'
+            },
+
+            // -------- VEGETABLES --------
+            spinach: {
+                display: 'Spinach', emoji: '🥬',
+                type: 'Spinacia oleracea — leafy green',
+                category: 'Vegetable', catClass: 'cat-veggie',
+                idealMoisture: '50 - 70%', idealTemp: '10 - 20°C',
+                idealHumidity: '50 - 70%', idealLight: 'Partial shade',
+                watering: 'Every 1-2 days',
+                tip: 'Grows best in cool weather — bolt-resistant in shade'
+            },
+            lettuce: {
+                display: 'Lettuce', emoji: '🥗',
+                type: 'Lactuca sativa — cool-season green',
+                category: 'Vegetable', catClass: 'cat-veggie',
+                idealMoisture: '60 - 80%', idealTemp: '10 - 22°C',
+                idealHumidity: '50 - 70%', idealLight: 'Partial sun',
+                watering: 'Every 1-2 days',
+                tip: 'Harvest outer leaves first for continuous growth'
+            },
+            chilli: {
+                display: 'Chilli', emoji: '🌶️',
+                type: 'Capsicum annuum — spicy fruiting plant',
+                category: 'Vegetable', catClass: 'cat-veggie',
+                idealMoisture: '50 - 70%', idealTemp: '20 - 30°C',
+                idealHumidity: '50 - 70%', idealLight: 'Full sun',
+                watering: 'Every 2-3 days',
+                tip: 'Slight water stress during fruiting increases spice'
+            },
+            cucumber: {
+                display: 'Cucumber', emoji: '🥒',
+                type: 'Cucumis sativus — vining vegetable',
+                category: 'Vegetable', catClass: 'cat-veggie',
+                idealMoisture: '65 - 80%', idealTemp: '20 - 30°C',
+                idealHumidity: '60 - 80%', idealLight: 'Full sun',
+                watering: 'Daily',
+                tip: 'Never let soil dry out — consistent moisture prevents bitterness'
+            },
+
+            // -------- FRUITS --------
+            tomato: {
+                display: 'Tomato', emoji: '🍅',
+                type: 'Solanum lycopersicum — fruiting plant',
+                category: 'Fruit', catClass: 'cat-fruit',
+                idealMoisture: '60 - 80%', idealTemp: '20 - 30°C',
+                idealHumidity: '50 - 80%', idealLight: 'Full sun',
+                watering: 'Every 1-2 days',
+                tip: 'Inconsistent watering causes blossom end rot'
+            },
+            strawberry: {
+                display: 'Strawberry', emoji: '🍓',
+                type: 'Fragaria × ananassa — fruiting plant',
+                category: 'Fruit', catClass: 'cat-fruit',
+                idealMoisture: '55 - 75%', idealTemp: '15 - 25°C',
+                idealHumidity: '60 - 80%', idealLight: 'Full sun',
+                watering: 'Every 2-3 days',
+                tip: 'Keep fruit off soil to prevent rot — use straw mulch'
+            },
+
+            // -------- FLOWERS --------
+            rose: {
+                display: 'Rose', emoji: '🌹',
+                type: 'Rosa — flowering shrub',
+                category: 'Flower', catClass: 'cat-flower',
+                idealMoisture: '50 - 65%', idealTemp: '18 - 28°C',
+                idealHumidity: '40 - 60%', idealLight: 'Full sun',
+                watering: 'Every 2-3 days',
+                tip: 'Water at base — wet leaves encourage black spot fungus'
+            },
+            sunflower: {
+                display: 'Sunflower', emoji: '🌻',
+                type: 'Helianthus annuus — tall annual',
+                category: 'Flower', catClass: 'cat-flower',
+                idealMoisture: '30 - 55%', idealTemp: '20 - 30°C',
+                idealHumidity: '40 - 60%', idealLight: 'Full sun',
+                watering: 'Every 3-4 days',
+                tip: 'Deep watering encourages deep roots for tall stems'
+            },
+            marigold: {
+                display: 'Marigold', emoji: '🌼',
+                type: 'Tagetes — pest-repelling annual',
+                category: 'Flower', catClass: 'cat-flower',
+                idealMoisture: '35 - 55%', idealTemp: '18 - 28°C',
+                idealHumidity: '40 - 60%', idealLight: 'Full sun',
+                watering: 'Every 3-4 days',
+                tip: 'Plant near vegetables to repel pests naturally'
+            },
+            jasmine: {
+                display: 'Jasmine', emoji: '🤍',
+                type: 'Jasminum — fragrant flowering vine',
+                category: 'Flower', catClass: 'cat-flower',
+                idealMoisture: '45 - 65%', idealTemp: '20 - 30°C',
+                idealHumidity: '50 - 70%', idealLight: 'Partial sun',
+                watering: 'Every 2-3 days',
+                tip: 'Prune after flowering to encourage next bloom cycle'
+            },
+
+            // -------- SUCCULENTS --------
+            succulent: {
+                display: 'Succulent', emoji: '🪴',
+                type: 'Succulent — drought-tolerant',
+                category: 'Succulent', catClass: 'cat-succulent',
+                idealMoisture: '10 - 30%', idealTemp: '18 - 30°C',
+                idealHumidity: '20 - 50%', idealLight: 'Bright light / direct sun',
+                watering: 'Every 10-14 days',
+                tip: 'Soak and dry method — water thoroughly then let fully dry'
+            },
+            aloe: {
+                display: 'Aloe Vera', emoji: '🌵',
+                type: 'Aloe barbadensis miller — medicinal succulent',
+                category: 'Succulent', catClass: 'cat-succulent',
+                idealMoisture: '10 - 25%', idealTemp: '18 - 30°C',
+                idealHumidity: '20 - 40%', idealLight: 'Bright indirect sun',
+                watering: 'Every 10-14 days',
+                tip: 'Brown leaf tips = overwatering; mushy base = root rot'
+            },
+            cactus: {
+                display: 'Cactus', emoji: '🌵',
+                type: 'Cactaceae — desert succulent',
+                category: 'Succulent', catClass: 'cat-succulent',
+                idealMoisture: '5 - 20%', idealTemp: '20 - 35°C',
+                idealHumidity: '10 - 30%', idealLight: 'Direct full sun',
+                watering: 'Every 14-21 days',
+                tip: 'In winter reduce watering to once a month'
+            },
+
+            // -------- TROPICAL --------
+            monstera: {
+                display: 'Monstera', emoji: '🌿',
+                type: 'Monstera deliciosa — tropical foliage',
+                category: 'Tropical', catClass: 'cat-tropical',
+                idealMoisture: '50 - 65%', idealTemp: '20 - 30°C',
+                idealHumidity: '60 - 80%', idealLight: 'Bright indirect light',
+                watering: 'Every 5-7 days',
+                tip: 'Yellow leaves = overwatering; brown edges = low humidity'
+            },
+            pothos: {
+                display: 'Pothos', emoji: '🍀',
+                type: 'Epipremnum aureum — trailing vine',
+                category: 'Tropical', catClass: 'cat-tropical',
+                idealMoisture: '40 - 60%', idealTemp: '18 - 28°C',
+                idealHumidity: '50 - 70%', idealLight: 'Low to bright indirect',
+                watering: 'Every 5-7 days',
+                tip: 'One of the most forgiving houseplants — great for beginners'
+            },
+            snakeplant: {
+                display: 'Snake Plant', emoji: '🐍',
+                type: 'Dracaena trifasciata — air purifier',
+                category: 'Tropical', catClass: 'cat-tropical',
+                idealMoisture: '20 - 40%', idealTemp: '15 - 30°C',
+                idealHumidity: '30 - 50%', idealLight: 'Low to bright indirect',
+                watering: 'Every 10-14 days',
+                tip: 'Thrives on neglect — perfect for low-light rooms'
+            },
+
+            // -------- TREES --------
+            mango: {
+                display: 'Mango', emoji: '🥭',
+                type: 'Mangifera indica — tropical fruit tree',
+                category: 'Tree', catClass: 'cat-tree',
+                idealMoisture: '50 - 70%', idealTemp: '24 - 35°C',
+                idealHumidity: '50 - 70%', idealLight: 'Full sun',
+                watering: 'Every 3-5 days',
+                tip: 'Reduce watering during flowering to improve fruit set'
+            },
+            lemon: {
+                display: 'Lemon Tree', emoji: '🍋',
+                type: 'Citrus limon — citrus tree',
+                category: 'Tree', catClass: 'cat-tree',
+                idealMoisture: '45 - 65%', idealTemp: '20 - 30°C',
+                idealHumidity: '50 - 70%', idealLight: 'Full sun',
+                watering: 'Every 3-5 days',
+                tip: 'Feed with citrus fertilizer monthly during growing season'
+            },
+
+            // -------- CUSTOM --------
+            custom: {
+                display: 'Custom Plant', emoji: '⚙️',
+                type: 'Custom — set your own requirements',
+                category: 'Custom', catClass: 'cat-custom',
+                idealMoisture: '—', idealTemp: '—',
+                idealHumidity: '—', idealLight: '—',
+                watering: '—',
+                tip: 'Configure thresholds based on your plant needs'
+            }
+        };
+
+        /*******************************************************
+         * ThingSpeak Config
+         *******************************************************/
+        const TS_CHANNEL_ID = "3293742";
+        const TS_READ_API = "WLJ41N1Y17VH5U6G";
+        const TS_RESULTS = 8;
+
+        /*******************************************************
+         * Fetch live data — 6 hours window, downsampled to 5-min
+         *******************************************************/
+        async function fetchLiveData() {
+            try {
+                const now = new Date();
+                const start = new Date(now - 6 * 60 * 60 * 1000);
+
+                const url = `https://api.thingspeak.com/channels/${TS_CHANNEL_ID}/feeds.json`
+                    + `?api_key=${TS_READ_API}`
+                    + `&start=${start.toISOString()}`
+                    + `&end=${now.toISOString()}`;
+
+                const res = await fetch(url);
+                const json = await res.json();
+
+                if (!json.feeds || json.feeds.length === 0) {
+                    console.warn("No ThingSpeak data — using sample");
+                    return sampleData;
+                }
+
+                const cleaned = json.feeds
+                    .filter(f => f.field1 && f.field2 && f.field3)
+                    .map(f => ({
+                        ts: new Date(f.created_at).getTime(),
+                        moisture: parseFloat(f.field1) || 0,
+                        temp: parseFloat(f.field2) || 0,
+                        hum: parseFloat(f.field3) || 0,
+                        light: parseFloat(f.field4) || 0
+                    }));
+
+                // Downsample to 1 reading per 5 minutes
+                const FIVE_MIN = 5 * 60 * 1000;
+                let lastKept = 0;
+                const downsampled = cleaned.filter(p => {
+                    if (p.ts - lastKept >= FIVE_MIN) { lastKept = p.ts; return true; }
+                    return false;
+                });
+
+                return downsampled.length >= 2 ? downsampled : sampleData;
+
+            } catch (err) {
+                console.error("ThingSpeak fetch failed:", err);
+                return sampleData;
+            }
+        }
+
+        /*******************************************************
+         * Linear regression (least squares)
+         *******************************************************/
+        function linearFitHours(points) {
+            if (points.length < 2) return { m: 0, b: points[0]?.y || 0, ref: points[0]?.t || 0 };
+
+            const ref = points[0].t;
+            const n = points.length;
+            const xs = points.map(p => (p.t - ref) / 3600000.0);
+            const ys = points.map(p => p.y);
+
+            let sx = 0, sy = 0, sxx = 0, sxy = 0;
+            for (let i = 0; i < n; i++) {
+                sx += xs[i]; sy += ys[i];
+                sxx += xs[i] * xs[i]; sxy += xs[i] * ys[i];
+            }
+
+            const denom = (n * sxx - sx * sx) || 1e-9;
+            const m = (n * sxy - sx * sy) / denom;
+            const b = (sy - m * sx) / n;
+            return { m, b, ref };
+        }
+
+        /*******************************************************
+         * Estimate hours until moisture hits threshold
+         *******************************************************/
+        function estimateHoursToThreshold(points, threshold) {
+            if (points.length < 2) return Infinity;
+
+            const fit = linearFitHours(points.map(p => ({ t: p.ts, y: p.moisture })));
+            const currentMoisture = points[points.length - 1].moisture;
+
+            // Debug
+            console.log(`Slope: ${fit.m.toFixed(4)}%/hr | Current: ${currentMoisture}% | Threshold: ${threshold}%`);
+
+            if (fit.m >= 0) return Infinity; // rising / stable
+            if (currentMoisture <= threshold) return 0;        // already dry
+
+            const hoursFromNow = (threshold - currentMoisture) / fit.m;
+            return hoursFromNow > 0 ? hoursFromNow : 0;
+        }
+
+        /*******************************************************
+         * Format hours nicely
+         *******************************************************/
+        function formatHours(hoursTo) {
+            if (hoursTo === Infinity) return 'Stable';
+            if (hoursTo <= 0) return 'Water Now!';
+            if (hoursTo < 1) {
+                return Math.round(hoursTo * 60) + ' min';
+            }
+            const h = Math.floor(hoursTo);
+            const m = Math.round((hoursTo - h) * 60);
+            return m > 0 ? `${h}h ${m}m` : `${h} hrs`;
+        }
+
+        /*******************************************************
+         * Chart setup
+         *******************************************************/
+        const ctx = document.getElementById('moistureChart').getContext('2d');
+        const moistureChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Soil moisture (%)',
+                        data: [],
+                        tension: 0.35, borderWidth: 3, pointRadius: 4,
+                        borderColor: 'rgba(2,132,199,0.95)',
+                        backgroundColor: 'rgba(2,132,199,0.08)',
+                        fill: true, yAxisID: 'y'
+                    },
+                    {
+                        label: 'Projection',
+                        data: [],
+                        tension: 0.25, borderWidth: 2,
+                        borderDash: [6, 6],
+                        borderColor: 'rgba(255,165,64,0.9)',
+                        pointRadius: 0, fill: false, yAxisID: 'y'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: true, labels: { color: '#0b3b57' } },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, max: 100, ticks: { color: '#0b3b57' } },
+                    x: { ticks: { color: '#0b3b57' } }
+                }
+            }
+        });
+
+        /*******************************************************
+         * Update UI
+         *******************************************************/
+        function updateUI(dataPoints) {
+            const latest = dataPoints[dataPoints.length - 1];
+
+            document.getElementById('latestMoist').innerText = latest.moisture + '%';
+            document.getElementById('latestTemp').innerText = latest.temp + '°C';
+            document.getElementById('latestHum').innerText = latest.hum + '%';
+            document.getElementById('envTemp').innerText = latest.temp + '°C';
+            document.getElementById('envHum').innerText = latest.hum + '%';
+            document.getElementById('envLight').innerText = latest.light;
+            document.getElementById('envSoil').innerText = latest.moisture + '%';
+            document.getElementById('lastUpdated').innerText = 'Updated: ' + new Date(latest.ts).toLocaleString();
+
+            // Chart — historical data
+            moistureChart.data.labels = dataPoints.map(p => new Date(p.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+            moistureChart.data.datasets[0].data = dataPoints.map(p => p.moisture);
+
+            // Projection: 6 hourly points ahead
+            const fit = linearFitHours(dataPoints.map(p => ({ t: p.ts, y: p.moisture })));
+            const lastTs = dataPoints[dataPoints.length - 1].ts;
+            const projection = [], projLabels = [];
+            for (let h = 1; h <= 6; h++) {
+                const futureTs = lastTs + h * 3600000;
+                const hoursFromRef = (futureTs - fit.ref) / 3600000;
+                const y = fit.m * hoursFromRef + fit.b;
+                projection.push(Math.max(0, Math.min(100, Math.round(y))));
+                projLabels.push(new Date(futureTs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+            }
+
+            const combinedLabels = moistureChart.data.labels.concat(projLabels);
+            const mainData = moistureChart.data.datasets[0].data.concat(Array(6).fill(null));
+            const projData = Array(moistureChart.data.labels.length).fill(null).concat(projection);
+
+            moistureChart.data.labels = combinedLabels;
+            moistureChart.data.datasets[0].data = mainData;
+            moistureChart.data.datasets[1].data = projData;
+            moistureChart.update();
+
+            // Stats
+            const avg = Math.round(dataPoints.reduce((s, p) => s + p.moisture, 0) / dataPoints.length);
+            document.getElementById('moistAvg').innerText = avg + '%';
+            document.getElementById('moistTrend').innerText = (fit.m >= 0 ? '+' : '') + fit.m.toFixed(2) + '%/hr';
+
+            // Threshold from selected plant
+            const plantKey = document.getElementById('plantSelect').value || 'basil';
+            const idealText = PLANTS[plantKey]?.idealMoisture || '40 - 60%';
+            const threshold = (function (t) {
+                if (!t || t.indexOf('-') < 0) return 30;
+                return parseInt(t.split('-')[0]);
+            })(idealText);
+
+            const hoursTo = estimateHoursToThreshold(dataPoints, threshold);
+            document.getElementById('nextWaterEst').innerText = formatHours(hoursTo);
+
+            // Prediction banner
+            const predBox = document.getElementById('predictionBox');
+            const predMain = document.getElementById('predMain');
+            const predSub = document.getElementById('predSub');
+            const danger = (hoursTo !== Infinity && hoursTo <= 6) || latest.moisture <= threshold - 2;
+
+            if (danger) {
+                predBox.className = 'prediction pred-danger';
+                predMain.innerText = '⚠️ Approaching danger — water soon';
+                predSub.innerText = `Moisture will hit ${threshold}% in ${formatHours(hoursTo)}.`;
+                document.getElementById('statusChip').innerText = 'Status: Attention Needed';
+            } else {
+                predBox.className = 'prediction pred-ok';
+                predMain.innerText = '✅ Conditions stable';
+                predSub.innerText = `Next threshold (~${threshold}%) in ${hoursTo === Infinity ? 'many hrs' : formatHours(hoursTo)}.`;
+                document.getElementById('statusChip').innerText = 'Status: Good';
+            }
+        }
+
+        /*******************************************************
+         * Plant selector change handler
+         *******************************************************/
+        function onPlantChange() {
+            const key = document.getElementById('plantSelect').value;
+            const p = PLANTS[key];
+
+            document.getElementById('plantEmoji').innerText = p.emoji;
+            document.getElementById('plantName').innerText = p.display;
+            document.getElementById('plantType').innerText = p.type;
+            document.getElementById('idealMoisture').innerText = p.idealMoisture;
+            document.getElementById('idealTemp').innerText = p.idealTemp;
+            document.getElementById('idealHumidity').innerText = p.idealHumidity;
+            document.getElementById('idealLight').innerText = p.idealLight;
+            document.getElementById('idealWatering').innerText = p.watering;
+            document.getElementById('careTip').innerText = p.tip;
+
+            // Category badge
+            const badge = document.getElementById('plantCategory');
+            badge.innerText = p.category;
+            badge.className = `category-badge ${p.catClass}`;
+
+            updateUI(sampleData); // re-render with current data
+        }
+
+        /*******************************************************
+         * Init
+         *******************************************************/
+        async function init() {
+            const data = await fetchLiveData();
+            updateUI(data);
+
+            document.getElementById('plantSelect').addEventListener('change', onPlantChange);
+
+            document.getElementById('refreshBtn').addEventListener('click', async () => {
+                document.getElementById('refreshBtn').innerText = 'Refreshing...';
+                const d = await fetchLiveData();
+                updateUI(d);
+                document.getElementById('refreshBtn').innerText = 'Refresh data';
+            });
+
+            onPlantChange();
+        }
+
+        // Auto-refresh every 16 seconds
+        setInterval(async () => {
+            const d = await fetchLiveData();
+            if (d && d.length > 0) updateUI(d);
+        }, 16000);
+
+        init();
+    </script>
+
+    <!-- ================================================
+         CUSTOM PLANT MODAL
+         ================================================ -->
+    <div class="modal-backdrop" id="modalBackdrop" onclick="closeModalOnBackdrop(event)">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+            <h2 id="modalTitle">🌱 Custom Plant</h2>
+
+            <!-- Saved plants list -->
+            <div id="savedListWrap" class="saved-list" style="display:none">
+                <div class="saved-list-title">Your saved plants</div>
+                <div id="savedListItems"></div>
+                <hr class="divider">
+            </div>
+
+            <div style="font-size:13px;color:var(--muted);margin-bottom:14px">
+                Fill in your plant's details. They'll be saved in your browser and added to the dropdown.
+            </div>
+
+            <div class="form-row">
+                <label>Plant name *</label>
+                <input id="cp_name" type="text" placeholder="e.g. My Orchid" maxlength="40">
+            </div>
+
+            <div class="form-row">
+                <label>Emoji icon</label>
+                <input id="cp_emoji" type="text" placeholder="🌸" maxlength="4">
+            </div>
+
+            <div class="form-row">
+                <label>Description / type</label>
+                <input id="cp_type" type="text" placeholder="e.g. Orchidaceae — exotic flower" maxlength="80">
+            </div>
+
+            <div class="form-grid">
+                <div class="form-row">
+                    <label>Min moisture %</label>
+                    <input id="cp_moistMin" type="number" min="0" max="100" placeholder="40">
+                </div>
+                <div class="form-row">
+                    <label>Max moisture %</label>
+                    <input id="cp_moistMax" type="number" min="0" max="100" placeholder="65">
+                </div>
+                <div class="form-row">
+                    <label>Min temp °C</label>
+                    <input id="cp_tempMin" type="number" min="-10" max="60" placeholder="18">
+                </div>
+                <div class="form-row">
+                    <label>Max temp °C</label>
+                    <input id="cp_tempMax" type="number" min="-10" max="60" placeholder="28">
+                </div>
+                <div class="form-row">
+                    <label>Min humidity %</label>
+                    <input id="cp_humMin" type="number" min="0" max="100" placeholder="50">
+                </div>
+                <div class="form-row">
+                    <label>Max humidity %</label>
+                    <input id="cp_humMax" type="number" min="0" max="100" placeholder="70">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>Light requirement</label>
+                <select id="cp_light">
+                    <option value="">— Select —</option>
+                    <option value="Full sun">Full sun</option>
+                    <option value="Partial sun">Partial sun</option>
+                    <option value="Bright indirect light">Bright indirect light</option>
+                    <option value="Low to bright indirect">Low to bright indirect</option>
+                    <option value="Partial shade">Partial shade</option>
+                    <option value="Low light">Low light</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label>Watering frequency</label>
+                <input id="cp_watering" type="text" placeholder="e.g. Every 3-4 days" maxlength="40">
+            </div>
+
+            <div class="form-row">
+                <label>Care tip</label>
+                <textarea id="cp_tip" placeholder="e.g. Mist leaves in dry weather"></textarea>
+            </div>
+
+            <div id="modalError" style="color:#ef4444;font-size:13px;display:none;margin-top:6px"></div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-save" onclick="saveCustomPlant()">💾 Save Plant</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /*******************************************************
+         * CUSTOM PLANT — localStorage persistence
+         *******************************************************/
+        const LS_KEY = 'smartPlantDash_customPlants';
+
+        // Load saved plants from localStorage → returns array
+        function loadSavedPlants() {
+            try {
+                return JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+            } catch { return []; }
+        }
+
+        // Save array back to localStorage
+        function persistPlants(arr) {
+            localStorage.setItem(LS_KEY, JSON.stringify(arr));
+        }
+
+        // Convert a saved-plant object into a PLANTS profile entry
+        function savedToProfile(sp) {
+            return {
+                display: sp.name,
+                emoji: sp.emoji || '🌿',
+                type: sp.type || 'Custom plant',
+                category: 'Custom',
+                catClass: 'cat-custom',
+                idealMoisture: `${sp.moistMin} - ${sp.moistMax}%`,
+                idealTemp: `${sp.tempMin} - ${sp.tempMax}°C`,
+                idealHumidity: `${sp.humMin} - ${sp.humMax}%`,
+                idealLight: sp.light || '—',
+                watering: sp.watering || '—',
+                tip: sp.tip || '—'
+            };
+        }
+
+        // Inject all saved plants into the PLANTS object and the <select> dropdown
+        function injectSavedPlants() {
+            const saved = loadSavedPlants();
+            const select = document.getElementById('plantSelect');
+
+            // Remove previously injected saved-plant options
+            const oldGroup = document.getElementById('savedPlantsGroup');
+            if (oldGroup) oldGroup.remove();
+
+            if (saved.length === 0) return;
+
+            // Add a new <optgroup> at the top of the dropdown
+            const group = document.createElement('optgroup');
+            group.label = '🌟 My Saved Plants';
+            group.id = 'savedPlantsGroup';
+
+            saved.forEach(sp => {
+                const key = 'saved_' + sp.id;
+                PLANTS[key] = savedToProfile(sp);          // register in PLANTS map
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = (sp.emoji || '🌿') + ' ' + sp.name;
+                group.appendChild(opt);
+            });
+
+            // Insert before the first <optgroup>
+            select.insertBefore(group, select.firstChild);
+        }
+
+        /*******************************************************
+         * Modal open / close
+         *******************************************************/
+        function openModal(editId) {
+            // Render saved list
+            renderSavedList();
+
+            // Pre-fill form if editing
+            if (editId !== undefined) {
+                const saved = loadSavedPlants();
+                const sp = saved.find(p => p.id === editId);
+                if (sp) prefillForm(sp);
+            } else {
+                clearForm();
+            }
+
+            document.getElementById('modalBackdrop').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('modalBackdrop').classList.remove('open');
+            document.getElementById('modalError').style.display = 'none';
+        }
+
+        function closeModalOnBackdrop(e) {
+            if (e.target === document.getElementById('modalBackdrop')) closeModal();
+        }
+
+        function clearForm() {
+            ['cp_name', 'cp_emoji', 'cp_type', 'cp_moistMin', 'cp_moistMax',
+                'cp_tempMin', 'cp_tempMax', 'cp_humMin', 'cp_humMax',
+                'cp_watering', 'cp_tip'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+            document.getElementById('cp_light').value = '';
+            document.getElementById('modalError').style.display = 'none';
+        }
+
+        function prefillForm(sp) {
+            document.getElementById('cp_name').value = sp.name || '';
+            document.getElementById('cp_emoji').value = sp.emoji || '';
+            document.getElementById('cp_type').value = sp.type || '';
+            document.getElementById('cp_moistMin').value = sp.moistMin || '';
+            document.getElementById('cp_moistMax').value = sp.moistMax || '';
+            document.getElementById('cp_tempMin').value = sp.tempMin || '';
+            document.getElementById('cp_tempMax').value = sp.tempMax || '';
+            document.getElementById('cp_humMin').value = sp.humMin || '';
+            document.getElementById('cp_humMax').value = sp.humMax || '';
+            document.getElementById('cp_light').value = sp.light || '';
+            document.getElementById('cp_watering').value = sp.watering || '';
+            document.getElementById('cp_tip').value = sp.tip || '';
+            // Store editing id on form
+            document.getElementById('cp_name').dataset.editId = sp.id;
+        }
+
+        /*******************************************************
+         * Render saved plants list inside modal
+         *******************************************************/
+        function renderSavedList() {
+            const saved = loadSavedPlants();
+            const wrap = document.getElementById('savedListWrap');
+            const list = document.getElementById('savedListItems');
+            list.innerHTML = '';
+
+            if (saved.length === 0) {
+                wrap.style.display = 'none';
+                return;
+            }
+            wrap.style.display = 'block';
+            saved.forEach(sp => {
+                const item = document.createElement('div');
+                item.className = 'saved-item';
+                item.innerHTML = `
+                <span style="font-size:18px">${sp.emoji || '🌿'}</span>
+                <span class="si-name">${sp.name}</span>
+                <span style="font-size:11px;color:var(--muted)">${sp.moistMin}-${sp.moistMax}% soil</span>
+                <button class="si-del" title="Delete" onclick="deleteSavedPlant('${sp.id}', event)">🗑</button>
+            `;
+                // Click to load into form for editing
+                item.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('si-del')) return;
+                    prefillForm(sp);
+                });
+                list.appendChild(item);
+            });
+        }
+
+        /*******************************************************
+         * Save / validate
+         *******************************************************/
+        function saveCustomPlant() {
+            const errEl = document.getElementById('modalError');
+            errEl.style.display = 'none';
+
+            const name = document.getElementById('cp_name').value.trim();
+            const moistMin = parseInt(document.getElementById('cp_moistMin').value);
+            const moistMax = parseInt(document.getElementById('cp_moistMax').value);
+
+            // Validation
+            if (!name) {
+                errEl.textContent = '⚠️ Plant name is required.';
+                errEl.style.display = 'block'; return;
+            }
+            if (isNaN(moistMin) || isNaN(moistMax) || moistMin >= moistMax) {
+                errEl.textContent = '⚠️ Enter valid moisture range (min < max).';
+                errEl.style.display = 'block'; return;
+            }
+
+            const saved = loadSavedPlants();
+            const editId = document.getElementById('cp_name').dataset.editId;
+            const isEdit = editId && saved.find(p => p.id === editId);
+
+            const plantObj = {
+                id: isEdit ? editId : Date.now().toString(),
+                name,
+                emoji: document.getElementById('cp_emoji').value.trim() || '🌿',
+                type: document.getElementById('cp_type').value.trim() || name,
+                moistMin: moistMin,
+                moistMax: moistMax,
+                tempMin: parseInt(document.getElementById('cp_tempMin').value) || 15,
+                tempMax: parseInt(document.getElementById('cp_tempMax').value) || 30,
+                humMin: parseInt(document.getElementById('cp_humMin').value) || 40,
+                humMax: parseInt(document.getElementById('cp_humMax').value) || 70,
+                light: document.getElementById('cp_light').value,
+                watering: document.getElementById('cp_watering').value.trim(),
+                tip: document.getElementById('cp_tip').value.trim()
+            };
+
+            if (isEdit) {
+                const idx = saved.findIndex(p => p.id === editId);
+                saved[idx] = plantObj;
+            } else {
+                saved.push(plantObj);
+            }
+
+            persistPlants(saved);
+            injectSavedPlants();
+
+            // Switch dropdown to newly saved plant
+            const selectKey = 'saved_' + plantObj.id;
+            document.getElementById('plantSelect').value = selectKey;
+            onPlantChange();
+
+            closeModal();
+            delete document.getElementById('cp_name').dataset.editId;
+        }
+
+        /*******************************************************
+         * Delete a saved plant
+         *******************************************************/
+        function deleteSavedPlant(id, e) {
+            e.stopPropagation();
+            if (!confirm('Delete this saved plant?')) return;
+            const saved = loadSavedPlants().filter(p => p.id !== id);
+            persistPlants(saved);
+            delete PLANTS['saved_' + id];
+            injectSavedPlants();
+            renderSavedList();
+
+            // If currently selected, switch to basil
+            const select = document.getElementById('plantSelect');
+            if (select.value === 'saved_' + id) {
+                select.value = 'basil';
+                onPlantChange();
+            }
+        }
+
+        /*******************************************************
+         * Show/hide "Edit Custom" button when custom is selected
+         *******************************************************/
+        function updateEditCustomBtn(key) {
+            const btn = document.getElementById('editCustomBtn');
+            if (key === 'custom' || key.startsWith('saved_')) {
+                btn.style.display = 'block';
+                btn.textContent = key.startsWith('saved_')
+                    ? '✏️ Edit this plant'
+                    : '✏️ Create / Manage Custom Plants';
+                btn.onclick = key.startsWith('saved_')
+                    ? () => { openModal(); const sp = loadSavedPlants().find(p => 'saved_' + p.id === key); if (sp) prefillForm(sp); document.getElementById('modalBackdrop').classList.add('open'); }
+                    : () => openModal();
+            } else {
+                btn.style.display = 'none';
+            }
+        }
+
+        // Patch onPlantChange to also show/hide the edit button
+        const _origOnPlantChange = onPlantChange;
+        onPlantChange = function () {
+            _origOnPlantChange();
+            updateEditCustomBtn(document.getElementById('plantSelect').value);
+        };
+
+        // Inject saved plants on load
+        injectSavedPlants();
+
+        // Show button if already on custom/saved on load
+        updateEditCustomBtn(document.getElementById('plantSelect').value);
+    </script>
+</body>
+
+</html>
