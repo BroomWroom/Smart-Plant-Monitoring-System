@@ -19,9 +19,9 @@
 */
 
 // ==================== BLYNK CONFIG ====================
-#define BLYNK_TEMPLATE_ID "TMPL3ngYp32s8"
-#define BLYNK_TEMPLATE_NAME "Smart Plant Monitoring"
-#define BLYNK_AUTH_TOKEN "re509CxqzW_KdBWJO8ObYzf7hnHOEB4P"
+#define BLYNK_TEMPLATE_ID "your_blynk_template_id"
+#define BLYNK_TEMPLATE_NAME "your_template_name"
+#define BLYNK_AUTH_TOKEN "your_auth_token"
 #define BLYNK_PRINT Serial
 
 // ==================== LIBRARIES ====================
@@ -31,12 +31,12 @@
 #include <ThingSpeak.h>
 
 // ==================== WiFi CREDENTIALS ====================
-char ssid[] = "iPhone";
-char pass[] = "123456789";
+char ssid[] = "your_wifi_ssid";
+char pass[] = "your_wifi_password";
 
 // ==================== THINGSPEAK CONFIG ====================
-unsigned long TS_CHANNEL_ID  = 3293742;          // Your ThingSpeak Channel ID
-const char*   TS_WRITE_KEY   = "Q3TEFCGQ9HXF5WNE"; // Write API Key
+unsigned long TS_CHANNEL_ID  = your_ts_channel_id;          // Your ThingSpeak Channel ID
+const char*   TS_WRITE_KEY   = "your_ts_write_api_key"; // Write API Key
 
 // ==================== PIN DEFINITIONS ====================
 #define DHTPIN     D2     // DHT sensor data pin
